@@ -1,0 +1,71 @@
+% ============================================================
+% Experiments
+% ============================================================
+\section{实验 / Experiments}\label{sec:experiments}
+
+\subsection{数据集}
+
+我们在三个数据集上评估了 PMR 的性能：
+\begin{itemize}
+  \item \textbf{ScienceQA}~
+cite{lu2022learn}: 面向科学教育的多模态问答数据集，包含 21,208 道多选题，涵盖自然、社会和形式科学等多个领域。
+  \item \textbf{A-OKVQA}~
+cite{schwenk2022aokvqa}: 需要外部知识和多步推理的视觉问答基准。
+  \item \textbf{SIAT-MR}: 我们自建的中文医学多模态推理数据集，包含 5,000 张胸部 X 光片及配套放射科报告，标注了病灶定位与诊断推理链。
+\end{itemize}
+
+\subsection{实验设置}
+
+实验基于 PyTorch 实现，视觉编码器采用 CLIP-ViT-L/14~
+cite{radford2021learning}，语言模型骨干为 LLaMA-2-7B~
+cite{touvron2023llama2}。训练使用 8 张 NVIDIA A100（40GB）GPU，批次大小为 32，学习率为 $2 \times 10^{-5}$，共训练 5 个 epoch。
+
+\subsection{主要结果}
+
+表~\ref{tab:main-results}~展示了 PMR 与现有基线方法的对比结果。
+
+\begin{table}[htbp]
+  \centering
+  \caption{主要实验结果（准确率 \%）。}
+  \label{tab:main-results}
+  \begin{tabular}{lcccc}
+    \toprule
+    \textbf{方法} & \textbf{ScienceQA} & \textbf{A-OKVQA} & \textbf{SIAT-MR} \\
+    \midrule
+    Flamingo~
+cite{alayrac2022flamingo} & 81.2 & 51.6 & 62.3 \\
+    LLaVA~
+cite{liu2023llava} & 83.5 & 54.2 & 68.7 \\
+    MiniGPT-4~
+cite{zhu2023minigpt4} & 79.8 & 52.1 & 65.4 \\
+    Multimodal-CoT~
+cite{zhang2023multimodal} & 87.5 & 57.3 & 71.2 \\
+    \midrule
+    \textbf{PMR (Ours)} & \textbf{90.1} & \textbf{61.4} & \textbf{75.0} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+从表中可以看出，PMR 在所有三个数据集上均取得了最优性能。特别在 SIAT-MR 数据集上，PMR 较次优方法提升了 3.8 个百分点，验证了其在专业医学多模态推理场景中的有效性。
+
+\subsection{消融实验}
+
+为进一步分析各模块的贡献，我们在 ScienceQA 数据集上进行了消融实验，结果如表~\ref{tab:ablation}~所示。
+
+\begin{table}[htbp]
+  \centering
+  \caption{消融实验结果。}
+  \label{tab:ablation}
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{配置} & \textbf{准确率} & \textbf{相对变化} \\
+    \midrule
+    完整 PMR & 90.1 & — \\
+    \quad 去掉分层注意力 & 87.9 & $-2.2$ \\
+    \quad 去掉渐进推理模块 & 86.4 & $-3.7$ \\
+    \quad 统一使用全局注意力 & 85.7 & $-4.4$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+实验结果表明，跨模态分层注意力和渐进式推理模块对最终性能均有显著正向贡献。

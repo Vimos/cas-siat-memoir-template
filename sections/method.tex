@@ -1,0 +1,60 @@
+% ============================================================
+% Method
+% ============================================================
+\section{方法 / Methodology}\label{sec:method}
+
+\subsection{总体框架}
+
+如图~\ref{fig:framework}~所示，PMR 框架由三个核心组件构成：视觉编码器 $f_V$、跨模态对齐模块 $f_A$ 和渐进推理生成器 $f_R$。给定一对图像-文本输入 $(I, T)$，模型的前向传播过程可形式化表示为：
+\begin{equation}
+  \hat{Y} = f_R\bigl(f_A(f_V(I), T)\bigr),
+\end{equation}
+其中 $\hat{Y}$ 为最终预测结果。
+
+\begin{figure}[htbp]
+  \centering
+  \fbox{\parbox{0.8\textwidth}{\centering\vspace{2em}框架示意图占位\\（建议放置 .png 或 .pdf 格式图片）\vspace{2em}}}
+  \caption{PMR 总体框架示意图。}
+  \label{fig:framework}
+\end{figure}
+
+\subsection{跨模态分层注意力机制}
+
+为了缓解粗粒度全局特征导致的语义错位问题，我们引入了一种分层注意力机制。设视觉特征图为 $\mathbf{V} \in \mathbb{R}^{H \times W \times C}$，文本词嵌入为 $\mathbf{T} \in \mathbb{R}^{L \times D}$。分层注意力首先在局部 patch 级别计算相似性矩阵：
+\begin{equation}
+  \mathbf{S}_{ij} = \frac{(\mathbf{W}_Q \mathbf{V}_i)^\top (\mathbf{W}_K \mathbf{T}_j)}{\sqrt{d_k}},
+\end{equation}
+随后通过多尺度聚合得到全局对齐表征：
+\begin{equation}
+  \mathbf{H} = \text{MLP}\bigl(\text{Concat}[\text{AvgPool}(\mathbf{S}), \text{MaxPool}(\mathbf{S})]\bigr).
+\end{equation}
+
+\subsection{渐进式推理模块}
+
+我们设计了显式的推理状态转移机制。在每一步 $t$，模型根据当前认知状态 $\mathbf{c}_t$ 选择下一个推理动作 $a_t$，并更新状态：
+\begin{equation}
+  \mathbf{c}_{t+1} = \text{GRU}(\mathbf{c}_t, \mathbf{e}_{a_t}),
+\end{equation}
+其中 $\mathbf{e}_{a_t}$ 为动作 $a_t$ 的嵌入向量。推理终止条件由门控单元自动学习决定。
+
+算法~\ref{alg:pmr}~总结了 PMR 的完整推理流程。
+
+\begin{algorithm}[htbp]
+\caption{渐进式多模态推理（PMR）}
+\label{alg:pmr}
+\KwIn{图像 $I$，问题 $Q$，最大步数 $T_{\max}$}
+\KwOut{答案 $\hat{Y}$，推理链 $\mathcal{R}$}
+提取视觉特征 $\mathbf{V} \leftarrow f_V(I)$\\
+编码文本 $\mathbf{T} \leftarrow \text{Tokenizer}(Q)$\\
+计算跨模态对齐 $\mathbf{H} \leftarrow f_A(\mathbf{V}, \mathbf{T})$\\
+初始化状态 $\mathbf{c}_0 \leftarrow \mathbf{H}$\\
+\For{$t = 1$ \KwTo $T_{\max}$}{
+  生成动作 $a_t \sim \pi_\theta(\cdot \mid \mathbf{c}_{t-1})$\\
+  更新状态 $\mathbf{c}_t \leftarrow \text{GRU}(\mathbf{c}_{t-1}, \mathbf{e}_{a_t})$\\
+  \If{终止门 $g_\phi(\mathbf{c}_t) > 0.5$}{
+    \textbf{break}
+  }
+}
+生成答案 $\hat{Y} \leftarrow f_R(\mathbf{c}_t)$\\
+\Return{$\hat{Y}, \{a_1, \dots, a_t\}$}
+\end{algorithm}

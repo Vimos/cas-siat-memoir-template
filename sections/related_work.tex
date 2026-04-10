@@ -1,0 +1,26 @@
+% ============================================================
+% Related Work
+% ============================================================
+\section{相关工作 / Related Work}\label{sec:related}
+
+\subsection{大语言模型的多模态扩展}
+
+大语言模型的发展历程表明，通过扩大模型规模和训练数据量，可以显著提升模型的泛化能力和涌现能力~
+cite{brown2020language}。在此基础上，研究者开始探索将视觉编码器与语言模型相结合的技术路线。Flamingo~
+cite{alayrac2022flamingo} 采用门控交叉注意力机制，在少量示例条件下实现了较强的视觉-语言理解能力。LLaVA~
+cite{liu2023llava} 和 MiniGPT-4~
+cite{zhu2023minigpt4} 则通过投影层将视觉特征映射到语言模型的输入空间，以更低的训练成本达到了竞争性性能。
+
+\subsection{多模态推理与链式思维}
+
+链式思维提示（Chain-of-Thought Prompting）已被证明能够有效激发大语言模型的推理能力~
+cite{wei2022chain}。在多模态场景中，Multimodal-CoT~
+cite{zhang2023multimodal} 率先将 CoT 应用于视觉问答任务，通过在文本和视觉特征上联合生成推理链来提升答案准确性。后续研究如 Visual Programming~
+cite{gupta2023visual} 和 ViperGPT~
+cite{suris2023vipergpt} 进一步将推理过程显式分解为可执行的程序步骤，增强了解释性和可控性。
+
+\subsection{医学多模态智能}
+
+医学领域的多模态分析通常涉及影像、病理报告、电子病历等多种数据源。现有工作如 Med-PaLM M~
+cite{tu2023towards} 和 LLaVA-Med~
+cite{li2023llavamed} 致力于构建通用的医学多模态大模型，但在需要精确空间推理和临床决策支持的任务中，性能仍有较大提升空间。我们的 SIAT-MR 数据集专注于胸部 X 光片与放射科报告的联合推理，填补了该方向基准数据稀缺的空白。
